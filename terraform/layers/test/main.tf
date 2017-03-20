@@ -8,6 +8,3 @@ resource "aws_instance" "DareServer" {
   instance_type = "t2.micro"
   count         = 4
 }
-
-#How can i specify elastic IP addresses for each of the servers created
-
