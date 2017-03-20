@@ -14,6 +14,6 @@ instance_type = "t2.micro"
 
 region = "eu-west-1"
 
-instance_count = 6
+instance_count = 2
 
 public_key_path = "/Users/dare.olufunmilayo/.ssh/id_rsa.pub"

@@ -8,6 +8,7 @@ resource "aws_instance" "cm-manager" {
   instance_type     = "${var.instance_type}"
   count             = "${var.instance_count}"
   availability_zone = "${var.availability_zone}"
+  key_name          = "${var.key_name}"
 
   root_block_device {
     delete_on_termination = true
@@ -55,6 +56,10 @@ resource "aws_subnet" "public" {
   cidr_block              = "10.1.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "eu-west-1a"
+
+  tags {
+    Name = "public"
+  }
 }
 
 #Create private1 subnet
@@ -63,6 +68,10 @@ resource "aws_subnet" "private1" {
   cidr_block              = "10.1.2.0/24"
   map_public_ip_on_launch = false
   availability_zone       = "eu-west-1b"
+
+  tags {
+    Name = "private1"
+  }
 }
 
 #Create private2 subnet
@@ -71,6 +80,10 @@ resource "aws_subnet" "private2" {
   cidr_block              = "10.1.3.0/24"
   map_public_ip_on_launch = false
   availability_zone       = "eu-west-1c"
+
+  tags {
+    Name = "private2"
+  }
 }
 
 #Create RDS1 subnet
