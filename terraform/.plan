@@ -1,3 +1,22 @@
 .plan
 
 -- Create an EC2 server and verify that it works
+-- Configure VPC and security groups for the following
+1. Bastion
+2. KAfka Broker
+3. CM Edgenode
+4. CM Manager
+5. Control nodes
+6. Datanodes
+7. RDS for meta store and other services that require RDS
+8. Schema registry
+9. VM Series Next generation
+10. Jobserver
+11. Zookeeper
+
+My questions
+1. Where are the values for the variables (tfvars?)
+
+
+
+

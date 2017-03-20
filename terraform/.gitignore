@@ -1,0 +1,32 @@
+# General
+.DS_Store
+.envrc
+.idea/
+tags
+.cache
+__pycache__
+*.pyc
+
+# Terraform
+.terraform
+.terragrunt
+*.tfstate
+*.tfstate.backup
+
+# Personal dev env
+environments/*/dev-*
+environments/*/dev_*
+
+# Binaries
+bin/terragrunt
+bin/terraform
+
+# testinfra
+layers/*/tests/__pycache__
+.cache/
+tests/ssh_config_tmp.*
+junit.xml
+
+# scratch space for building environments
+/workspace
+
