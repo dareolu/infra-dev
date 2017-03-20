@@ -6,7 +6,7 @@ provider "aws" {
 resource "aws_instance" "cm-manager" {
   ami               = "${var.ami_id}"
   instance_type     = "${var.instance_type}"
-  count             = 1
+  count             = "${var.instance_count}"
   availability_zone = "${var.availability_zone}"
   key_name          = "${var.key_name}"
 

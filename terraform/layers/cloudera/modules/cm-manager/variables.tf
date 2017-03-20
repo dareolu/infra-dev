@@ -9,3 +9,4 @@ variable "instance_type" {}
 variable "key_name" {}
 variable "volume_size" {}
 variable "ami_id" {}
+variable "instance_count" {}
