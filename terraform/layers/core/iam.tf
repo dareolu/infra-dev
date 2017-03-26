@@ -63,3 +63,15 @@ resource "aws_iam_policy" "s3_repository_policy" {
 }
 EOF
 }
+
+output "bootstraping_Ec2_profile" {
+  value = "${aws_iam_instance_profile.bootstraping_Ec2_profile.name}"
+}
+
+output "subnet_id" {
+  value = "${aws_subnet.public_vpc_spot_a.id}"
+}
+
+output "vpc_security_group_ids" {
+  value = "${aws_security_group.bastion.id}"
+}
