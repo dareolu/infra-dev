@@ -21,7 +21,7 @@ resource "aws_instance" "bastion" {
   ami   = "${var.ami_id}"
 
   #user_data              = "${data.template_file.bootstrap.rendered}"
-  iam_instance_profile   = "${data.terraform_remote_state.infrastructure.bootstraping_Ec2_profile}"
+  iam_instance_profile   = "${data.terraform_remote_state.infrastructure.ec2_bootstrap_profile_name}"
   subnet_id              = "${data.terraform_remote_state.infrastructure.subnet_id}"
   vpc_security_group_ids = ["${data.terraform_remote_state.infrastructure.vpc_security_group_ids}"]
 

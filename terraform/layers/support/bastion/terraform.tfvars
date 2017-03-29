@@ -1,9 +1,3 @@
-#AWS_ACCESS_KEY_ID = "AKIAI2ADTM2K4BKDZKIQ"
-
-#AWS_SECRET_ACCESS_KEY = "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"
-
-#AWS_DEFAULT_REGION = "eu-west-1"
-
 aws_profile = "dare"
 
 availability_zone = "eu-west-1a"
@@ -14,7 +8,7 @@ state_bucket = "cdh-infra"
 
 state_file = "infrastructure/cdh5_state.state"
 
-ami_id = "ami-942b1af2"
+ami_id = "ami-12291974"
 
 instance_type = "t2.micro"
 
