@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# vim: ft=sh
+
+set -e
+[[ $TRACE ]] && set -x
+
+readonly ansible_dir="/opt/infra/ansible"
+readonly instance=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+readonly region=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region)
+readonly tag_file="/tmp/aws_tags.json"
+
+## Send output to syslog
+exec >& >(exec logger -i -s -t "$(basename $0)") 2>&1
+
+# Get all tags from the EC2 instance
+aws ec2 describe-instances --filter \
+  "Name=instance-id,Values=$instance" \
+  --query "Reservations[].Instances[].Tags[]" \
+  --output json \
+  --region $region \
+  > $tag_file
+
+# Get a single EC2 instance tag
+get_tag(){
+  jq -r ".[] | select(.Key==\"$1\") | .Value" $tag_file
+}
+
+environment=$(get_tag environment)
+host_role=$(get_tag ansible_host)
+node_name=$(get_tag Name)
+project=$(get_tag project)
+cloudera_role=$(get_tag cloudera_role)
+
+# create aws config - remember, machine must have an IAM role!
+mkdir -p ~/.aws
+echo "[default]" > ~/.aws/config
+echo "region=${region}" >> ~/.aws/config
+
+mkdir -p /etc/js
+echo "${project}" > /etc/js/project
+echo "${environment}" > /etc/js/environment
+echo "${host_role}" > /etc/js/role
+echo "${node_name}" > /etc/js/name
+echo "${cloudera_role}" > /etc/js/cloudera_role
+
+rm -rf ${ansible_dir}
+mkdir -p ${ansible_dir}
+aws s3 cp \
+  s3://${project}-${environment}-infrastructure/ansible/ansible.tgz - \
+  | tar --warning=no-unknown-keyword -xz -C $ansible_dir
+
+# Run ansible
+${ansible_dir}/bin/al "$@"
