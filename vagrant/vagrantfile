@@ -65,7 +65,8 @@ Vagrant.configure("2") do |config|
       xpoint_config.vm.provision :shell, :path => "configuring-os/provision_for_os_settings.sh"
       xpoint_config.vm.provision :shell, :path => "configuring-os/provision_for_os.sh"
       xpoint_config.vm.provision :shell, :path => "configuring-os/provision_for_print_os.sh"
-
+      puts "Deploying Cloudera Manager RPMS...."
+      xpoint_config.vm.provision :shell, :path => "repo-cloudera/provision_rpm_cm572.sh"
     end
   end
 end
