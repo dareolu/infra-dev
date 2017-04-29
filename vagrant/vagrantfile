@@ -1,0 +1,46 @@
+varTemplateNode = "CDH-template-node"
+varManagerServer = "CM-Master"
+varSlaveServer = "CM-Slave"
+varVersion ="5.7"
+
+
+xpoint_nodes = [
+    {:host => "#{varManagerServer}""-""#{varVersion}" , :box => "boxcutter/centos67", :ram => 2096, :cpu => 2, :version => "2.0.14", :gui => false, :ipAddress => "10.10.45.9"},
+    {:host => "#{varSlaveServer}""-""#{varVersion}""-1" , :box => "boxcutter/centos67", :ram => 3072, :cpu => 1, :version => "2.0.14", :gui => false, :ipAddress => "10.10.45.10"},
+    {:host => "#{varSlaveServer}""-""#{varVersion}""-2" , :box => "boxcutter/centos67", :ram => 2048, :cpu => 1, :version => "2.0.14", :gui => false, :ipAddress => "10.10.45.11"}
+    ]
+varDomain = "xpoint.internal"
+VarRepository = "I:/Devops/Repository"
+#puts
+
+Vagrant.configure("2") do |config|
+  config.hostmanager.enabled = true
+  config.hostmanager.manage_host = true
+  config.hostmanager.manage_guest = true
+  config.hostmanager.ignore_private_ip = false
+  config.hostmanager.include_offline = true
+  xpoint_nodes.each do |xpoint_node|
+    config.vm.define xpoint_node[:host]  do |xpoint_config|
+
+      xpoint_config.vm.box = xpoint_node[:box]
+      #xpoint_config.vm.hostname =  xpoint_node[:host] + "." + varDomain
+      xpoint_config.vm.hostname =  "#{xpoint_node[:host]}.#{varDomain}"
+      xpoint_config.hostmanager.aliases = "#{xpoint_node[:host]}"
+      xpoint_config.vm.network "private_network", ip: xpoint_node[:ipAddress], :netmask => "255.255.255.0"
+      xpoint_config.vm.box_version = xpoint_node[:version]
+      xpoint_config.vm.provider :virtualbox do |v|
+        v.name = xpoint_node[:host].to_s
+        v.gui = xpoint_node[:gui]
+        v.customize ["modifyvm", :id, "--memory", xpoint_node[:ram].to_s]
+        v.customize ["modifyvm", :id, "--cpus", xpoint_node[:cpu].to_s]
+      end
+      xpoint_config.vm.synced_folder VarRepository, "/repository",
+        id: "repository",
+        owner: "vagrant",
+        group: "vagrant"
+      #This bit is a provisioning script that installs Java
+      xpoint_config.vm.provision :shell, :path => "java/provision_for_java.sh"
+    end
+  end
+end
+#bento/centos-6.7
