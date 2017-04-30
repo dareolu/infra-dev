@@ -1,15 +1,17 @@
 #Variables Definition
 varTemplateNode = "CDH-template-node"
-varManagerServer = "CM-Master"
-varSlaveServer = "CM-Slave"
 varVersion ="5.7"
+varManagerServer = "CM-Master""-""#{varVersion}"
+varSlaveServer = "CM-Slave""-""#{varVersion}"
 varDomain = "xpoint.internal"
 varRepository = "I:/Devops/Repository"
+web_server_alias_dir_also_sub_dir = "parcels"
+web_server_dir = "_cdh5-parcels"
 #Specify node attributes in a List
 xpoint_nodes = [
-    {:host => "#{varManagerServer}""-""#{varVersion}" , :box => "boxcutter/centos67", :ram => 2096, :cpu => 2, :version => "2.0.14", :gui => false, :ipAddress => "10.10.45.9"},
-    {:host => "#{varSlaveServer}""-""#{varVersion}""-1" , :box => "boxcutter/centos67", :ram => 3072, :cpu => 1, :version => "2.0.14", :gui => false, :ipAddress => "10.10.45.10"},
-    {:host => "#{varSlaveServer}""-""#{varVersion}""-2" , :box => "boxcutter/centos67", :ram => 2048, :cpu => 1, :version => "2.0.14", :gui => false, :ipAddress => "10.10.45.11"}
+    {:host => varManagerServer, :box => "boxcutter/centos67", :ram => 2096, :cpu => 2, :version => "2.0.14", :gui => false, :ipAddress => "10.10.45.9"},
+    {:host => "#{varSlaveServer}""-1" , :box => "boxcutter/centos67", :ram => 3072, :cpu => 1, :version => "2.0.14", :gui => false, :ipAddress => "10.10.45.10"},
+    {:host => "#{varSlaveServer}""-2" , :box => "boxcutter/centos67", :ram => 2048, :cpu => 1, :version => "2.0.14", :gui => false, :ipAddress => "10.10.45.11"}
     ]
 #find a way to structure the content that will go into the host file during bootstrap
 varHostEntries = ""
@@ -67,6 +69,12 @@ Vagrant.configure("2") do |config|
       xpoint_config.vm.provision :shell, :path => "configuring-os/provision_for_print_os.sh"
       puts "Deploying Cloudera Manager RPMS...."
       xpoint_config.vm.provision :shell, :path => "repo-cloudera/provision_rpm_cm572.sh"
+      #Conditional statements to put control in our Vagrant script
+      if xpoint_node[:host] == varManagerServer
+        xpoint_config.vm.provision :shell,
+        :path => "webserver/provision_for_httpd_67_v3.sh",
+        :args => [varManagerServer, web_server_alias_dir_also_sub_dir,  web_server_dir]
+      end
     end
   end
 end
