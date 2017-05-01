@@ -1,0 +1,7 @@
+#!/bin/bash
+#create_ssh_dir
+
+if ! [[ -d ~/.ssh/ ]]
+ then
+mkdir ~/.ssh/
+fi
