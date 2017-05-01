@@ -1,0 +1,16 @@
+#!/bin/bash
+#Associative Arrays
+hosts=()
+domain=".xpoint.internal"
+etchosts="/etc/hosts"
+declare -A arr
+arr["139.162.239.239"]=datanode1
+arr+=(  ["139.162.255.234"]=datanode2 ["139.162.232.149"]=datanode3 ["139.162.255.243"]=masternode1 )
+for key in ${!arr[@]}; do
+host+=( "${key} ${arr[${key}]}$domain ${arr[${key}]}" )
+ssh ${key} "hostname  ${arr[${key}]}$domain"
+done
+printf '%s\n' "${host[@]}" >> $etchosts
+for key in ${!arr[@]}; do
+scp  $etchosts "${key}":$etchosts
+done
