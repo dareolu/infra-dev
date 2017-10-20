@@ -1,1 +1,0 @@
-JAVA RPM should be downloaded and placed here. You need an Oracle licence agreement, hence you should download it yourself. Its FREE
