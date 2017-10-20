@@ -47,6 +47,7 @@ Vagrant.configure("2") do |config|
       group: "vagrant"
     #"Configuring Java", "Inserting hostnames in /etc/hosts"
       pocd_config.vm.provision :shell, :path => "deployJava/provision_for_java.sh"
+      pocd_config.vm.provision :shell, :path => "tuning-os/tunning_operating_system.sh"
       pocd_config.vm.provision :shell, :inline => $etchosts
       puts "Starting Cloudera Manager Deployment using RPMS"
       pocd_config.vm.provision :shell, :path => "deployClouderaRepo/provision_rpm_cm572.sh"
