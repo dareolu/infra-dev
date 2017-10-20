@@ -1,1 +1,0 @@
-Cloudera Manager RPMS should be extracted here as a folder
