@@ -1,0 +1,15 @@
+# Template for RepoDir
+Alias /parcels/ "/repository/_cdh5-parcels/"
+
+<Directory "/repository/_cdh5-parcels/">
+        Options All Indexes
+        AllowOverride all
+        Order allow,deny
+        Allow from all
+    </Directory>
+<DirectoryMatch  /repository/_cdh5-parcels/(.)*/>
+        Options +Indexes
+</DirectoryMatch>
+
+# ServerName templateMasterNode:80
+
