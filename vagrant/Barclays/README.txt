@@ -22,6 +22,9 @@ vagrant box add  templateSlaveNode file:///E:/Barclays/VAGRANT_PROJECT/CDHSlave.
 
 
 
+Activity Monitor
+amon - GQvO4lnglE
 
 
-
+Reports Manager
+rman - Nq1Ahm1AdX

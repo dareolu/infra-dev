@@ -1,80 +1,104 @@
-varManagerServer = "templateMasterNode"
-varSlaveServer = "templateSlaveNode"
+varManagerServer = "cm-master"
+varCDHServer = "cdh-master"
+varSlaveServer = "cdh-node"
+
+
+varRamMan=10240
+varRamNode=6144
+
 varDomain = "xpoint.internal"
-varHostEntries = ""
 varRepository = "E:/Barclays/VAGRANT_PROJECT/REPOSITORY/"
-webServerParcelsDir = "parcels"
-webServerCDHDir = "_cdh5-parcels"
-varCmAgentStatus = "stop"
 
-# Define the hosts in an array
+hadoop_nodes = [# Cloudera Manager
+              {:host => "#{varManagerServer}""-1", :ip => "10.10.46.11", :box => "templateMasterNode", :gui => false, :ram => varRamMan, :cpu => 8},
 
-hadoop_nodes = [
-              {:host => "#{varManagerServer}", :ip => "10.10.45.10", :box => "boxcutter/centos67", :gui => false, :ram => 10240, :cpu => 10},
-              { :host => "#{varSlaveServer}", :ip => "10.10.45.11", :box => "boxcutter/centos67", :gui => false, :ram => 10240, :cpu => 10},
-            #  {:host => "#{varSlaveServer}""-2", :ip => "10.10.45.12", :box => "boxcutter/centos67", :gui => false, :ram => 10240, :cpu => 10}
+              # Hadoop Masters
+              {:host => "#{varCDHServer}""-1", :ip => "10.10.46.12", :box => "templateSlaveNode", :gui => false, :ram => varRamMan, :cpu => 8},
+              {:host => "#{varCDHServer}""-2", :ip => "10.10.46.13", :box => "templateSlaveNode", :gui => false, :ram => varRamMan, :cpu => 8},
+
+              # Hadoop Slaves
+              {:host => "#{varSlaveServer}""-1", :ip => "10.10.46.14", :box => "templateSlaveNode", :gui => false, :ram => varRamNode, :cpu => 5},
+              {:host => "#{varSlaveServer}""-2", :ip => "10.10.46.15", :box => "templateSlaveNode", :gui => false, :ram => varRamNode, :cpu => 5},
+              {:host => "#{varSlaveServer}""-3", :ip => "10.10.46.16", :box => "templateSlaveNode", :gui => false, :ram => varRamNode, :cpu => 5},
+              {:host => "#{varSlaveServer}""-4", :ip => "10.10.46.17", :box => "templateSlaveNode", :gui => false, :ram => varRamNode, :cpu => 5},
+              {:host => "#{varSlaveServer}""-5", :ip => "10.10.46.18", :box => "templateSlaveNode", :gui => false, :ram => varRamNode, :cpu => 5}
 ]
 
-#"#{varManagerServer}""-1"
-#"#{varSlaveServer}""-1"
 
-
+## ################################################################
+## START - HOSTS FOR GUESTS
+## ################################################################
+varHostEntries = ""
 hadoop_nodes.each do |hadoop_node|
-    varHostEntries << "#{hadoop_node[:ip]} #{hadoop_node[:host]}.#{varDomain} #{hadoop_node[:host]}\n"
+	varHostEntries << "#{hadoop_node[:ip]} #{hadoop_node[:host]}.#{varDomain} #{hadoop_node[:host]}\n"
 end
-#Now pass hostfile content into /etc/hosts
+
+puts varHostEntries
+
 $etchosts = <<SCRIPT
 #!/bin/bash
 cat > /etc/hosts <<EOF
 127.0.0.1       localhost
-10.10.45.1     host.#{varDomain} host
+10.10.46.1      host.#{varDomain} host
 #{varHostEntries}
 EOF
 SCRIPT
 
+
+## ################################################################
+## END - HOSTS FOR GUESTS
+## ################################################################
+
 Vagrant.configure("2") do |config|
+
   config.hostmanager.enabled = true
   config.hostmanager.manage_host = true
   config.hostmanager.manage_guest = false
   config.hostmanager.ignore_private_ip = false
   config.hostmanager.include_offline = true
+
   hadoop_nodes.each do |hadoop_node|
-  config.vm.define hadoop_node [:host] do |hadoop_config|
+	config.vm.define hadoop_node[:host] do |hadoop_config|
 
-    hadoop_config.vm.box = hadoop_node [:box]
+		hadoop_config.ssh.username = "vagrant"
+		hadoop_config.ssh.password = "vagrant"
 
-    hadoop_config.vm.network "private_network", ip: hadoop_node[:ip], :netmask => "255.255.255.0"
-    hadoop_config.vm.hostname = "#{hadoop_node [:host]}.#{varDomain}"
-    hadoop_config.hostmanager.aliases = "#{hadoop_node[:host]}"
-    hadoop_config.vm.provider :virtualbox do |v|
-      v.name = hadoop_node[:host].to_s
-      v.gui = hadoop_node[:gui]
-      v.customize ["modifyvm", :id, "--memory", hadoop_node[:ram].to_s]
-      v.customize ["modifyvm", :id, "--cpus", hadoop_node[:cpu].to_s]
-    end
+		hadoop_config.vm.box = hadoop_node[:box]
+		hadoop_config.vm.hostname = "#{hadoop_node[:host]}.#{varDomain}"
+		hadoop_config.vm.network "private_network", ip: hadoop_node[:ip], :netmask => "255.255.255.0"
 
-    hadoop_config.vm.synced_folder varRepository, "/repository",
-      id: "repository",
-      owner: "vagrant",
-      group: "vagrant"
-    #"Configuring Java", "Inserting hostnames in /etc/hosts"
-      hadoop_config.vm.provision :shell, :path => "deployJava/provision_for_java.sh"
-      hadoop_config.vm.provision :shell, :path => "tuning-os/tunning_operating_system.sh"
-      hadoop_config.vm.provision :shell, :inline => $etchosts
-      puts "Starting Cloudera Manager Deployment using RPMS"
-      hadoop_config.vm.provision :shell, :path => "deployClouderaRepo/provision_rpm_cm572.sh"
+		hadoop_config.hostmanager.aliases = "#{hadoop_node[:host]}"
 
+		hadoop_config.vm.provider :virtualbox do |v|
+			v.name = hadoop_node[:host].to_s
+			v.gui = hadoop_node[:gui]
 
-      #Deploy Web Server and CM Manager on the Master
-      if hadoop_node[:host] == varManagerServer
-         hadoop_config.vm.provision :shell,
-        :path => "deployWebserver/provision_httpd_67_v3.sh",
-        :args => [varManagerServer, webServerParcelsDir,  webServerCDHDir]
-        hadoop_config.vm.provision :shell, :path => "deployClouderaManager/provision_for_cdh_master_embedded.sh"
-      end
-      hadoop_config.vm.provision :shell, :path => "deployClouderaAgent/provision_for_cdh_datanode.sh",
-      :args => [varSlaveServer , varCmAgentStatus]
+			v.customize ["modifyvm", :id, "--memory", hadoop_node[:ram].to_s]
+			v.customize ["modifyvm", :id, "--cpus", hadoop_node[:cpu].to_s]
+		end
 
-    end
+		hadoop_config.vm.synced_folder varRepository, "/repository",
+			id: "repository",
+			owner: "vagrant",
+			group: "vagrant"
+
+		hadoop_config.vm.provision :shell, :inline => $etchosts
+
+		hadoop_config.vm.provision :shell, :path => "os-tuning/provision_for_print_os.sh"
+		hadoop_config.vm.provision :shell, :path => "os-tuning/provision_for_os_settings.sh"
+		hadoop_config.vm.provision :shell, :path => "os-tuning/provision_for_os.sh"
+		hadoop_config.vm.provision :shell, :path => "os-tuning/provision_for_print_os.sh"
+
+		if hadoop_node[:host] == varManagerServer
+			hadoop_config.vm.provision :shell, :path => "webserver/provision_for_httpd_start_67_v2.sh"
+
+			# http://hadoop-cm572-dev-manager:7180/
+			hadoop_config.vm.provision :shell, :path => "cloudera-manager-deploy/provision_for_cm_server.sh"
+		end
+
+		hadoop_config.vm.provision :shell, :path => "cloudera-node-deploy/provision_for_cm_client_v2.sh",
+			:args => "#{varManagerServer}"
+
+	end
   end
 end
