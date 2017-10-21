@@ -5,15 +5,18 @@ varHostEntries = ""
 varRepository = "E:/Barclays/VAGRANT_PROJECT/REPOSITORY/"
 webServerParcelsDir = "parcels"
 webServerCDHDir = "_cdh5-parcels"
+varCmAgentStatus = "stop"
 
 # Define the hosts in an array
 
 pocd_nodes = [
-              {:host => varManagerServer, :ip => "10.10.45.10", :box => "boxcutter/centos67", :gui => false, :ram => 10240, :cpu => 10},
-            #  { :host => "cm571-template2", :ip => "192.168.1.113", :box => "boxcutter/centos67", :gui => false, :ram => 10240, :cpu => 10},
-              #{:host => "cm571-template3", :ip => "192.168.1.114", :box => "boxcutter/centos67", :gui => false, :ram => 10240, :cpu => 10}
+              {:host => "#{varManagerServer}", :ip => "10.10.45.10", :box => "boxcutter/centos67", :gui => false, :ram => 10240, :cpu => 10},
+              { :host => "#{varSlaveServer}", :ip => "10.10.45.11", :box => "boxcutter/centos67", :gui => false, :ram => 10240, :cpu => 10},
+            #  {:host => "#{varSlaveServer}""-2", :ip => "10.10.45.12", :box => "boxcutter/centos67", :gui => false, :ram => 10240, :cpu => 10}
 ]
 
+#"#{varManagerServer}""-1"
+#"#{varSlaveServer}""-1"
 
 
 pocd_nodes.each do |pocd_node|
@@ -69,7 +72,8 @@ Vagrant.configure("2") do |config|
         :args => [varManagerServer, webServerParcelsDir,  webServerCDHDir]
         pocd_config.vm.provision :shell, :path => "deployClouderaManager/provision_for_cdh_master_embedded.sh"
       end
-
+      pocd_config.vm.provision :shell, :path => "deployClouderaAgent/provision_for_cdh_datanode.sh",
+      :args => [varSlaveServer , varCmAgentStatus]
 
     end
   end
