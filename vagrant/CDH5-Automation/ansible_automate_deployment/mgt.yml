@@ -1,0 +1,150 @@
+---
+- hosts: cloudera
+  user: vagrant
+  become: true
+  gather_facts: no
+  tasks:
+  - name: install pre-requisite libraries
+    yum:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+      #- '*'
+      - epel-release
+      - python-pip
+  - pip:
+      name: "{{ item }}"
+      extra_args: --upgrade
+    with_items:
+      - pexpect
+      - pip
+  - name: Create directories for certificates
+    file:
+      path: "{{ item }}"
+      owner: cloudera-scm
+      group: cloudera-scm
+      state: directory
+      mode: 0755
+    with_items:
+      - "{{ '/opt/cloudera/security/x509/' }}"
+      - "{{ '/opt/cloudera/security/jks/' }}"
+      - "{{ '/home/vagrant/dare/TLS/' }}"
+      - "{{'/home/vagrant/dare/scripts/'}}"
+      - "{{'/home/vagrant/dare/tmux/'}}"
+  - name: create keystores
+    command: /usr/java/jdk1.8.0_151/bin/keytool -genkeypair -keystore $(hostname -f).keystore -keyalg RSA -alias $(hostname --short) -dname "CN=$(hostname -f),OU=Security,O=Hadoop,L=Tilbury,ST=Essex,C=UK" -storepass password -keypass password
+    args:
+      chdir: /home/vagrant/dare/TLS
+      creates: /home/vagrant/dare/TLS/*.keystore
+  - copy:
+      src: /usr/java/jdk1.8.0_151/jre/lib/security/cacerts
+      dest: /usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts
+      owner: root
+      group: root
+  - copy:
+      content: |
+        sudo /usr/java/jdk1.8.0_151/bin/keytool -export -alias $(hostname -s) -keystore /home/vagrant/dare/TLS/$(hostname).keystore -rfc -file selfsigned.cer
+      dest: /home/vagrant/dare/TLS/exportcertscript.sh
+    run_once: yes
+  - copy:
+      content: |
+        #!/bin/bash
+        #check for dependencies and install them if not already available
+        for package in "$@"
+        do
+          if [[ $package == *"Dev"* ]]
+          then
+          if (yum grouplist Dev* | grep -q Available)
+          then
+            echo $package "will be a group install"
+            sudo yum -y groupinstall $package
+          else
+            echo $package "is already installed"
+          fi
+        else
+          if (rpm -q $package | grep -q not)
+          then
+               echo $package "will be a yum install"
+               sudo yum -y install $package
+          else
+            echo $package "is already installed"
+          fi
+        fi
+        done
+
+        #Set up
+        if [[ ! -d /home/home/vagrant/dare/tmux/ ]]
+        then
+          mkdir  -p /home/home/vagrant/dare/tmux/
+        fi
+
+        cd /home/home/vagrant/dare/tmux/
+
+        if [[ ! -e libevent-2.0.22-stable.tar.gz ]]
+          then
+            echo "********************** Setting up dependencies for TMUX *******************"
+            sudo wget https://github.com/libevent/libevent/releases/download/release-2.0.22-stable/libevent-2.0.22-stable.tar.gz
+            sudo tar -xvzf libevent-2.0.22-stable.tar.gz
+            cd libevent-2.0.22-stable
+            sudo ./configure
+            sudo make -j 4
+            sudo make install
+        else
+          echo "Tmux dependencies has been configured"
+        fi
+
+        cd ..
+
+        if [[ ! -f tmux-2.1.tar.gz ]]
+          then
+            echo "********************* Downloading TMUX ************************************"
+            sudo wget https://github.com/tmux/tmux/releases/download/2.1/tmux-2.1.tar.gz
+            sudo tar -xvzf tmux-2.1.tar.gz
+            cd tmux-2.1
+            sudo ./configure LDFLAGS="-Wl,-rpath,/usr/local/lib"
+            sudo make -j 4
+            sudo make install
+        else
+          echo "Tmux is installed"
+        fi
+      dest:  /home/vagrant/dare/scripts/tmux-setup.sh
+    run_once: yes
+  - copy:
+      content: |
+        #!/bin/sh
+        usage() {
+          echo "Usage: $0 user1@host1 user2@host2 host3 host{4..6} host7 host8 [...]"
+        }
+        [ $# -lt 1 ] && usage && exit 1
+
+        create_ssh_pane() {
+          local session=$1
+          local host=$2
+
+          tmux has-session -t $session 2>/dev/null \
+            && tmux split-window -t $session "exec ssh $host" \
+            || tmux new-session -d -s $session "exec ssh $host"
+
+          tmux select-layout -t $session tiled >/dev/null
+        }
+
+        export session="cssh-$$"
+        for host in "$@"; do
+          create_ssh_pane $session $host
+        done
+        #tmux set-window-option -t $session status off >/dev/null
+        tmux set-window-option -t $session synchronize-panes on >/dev/null
+        exec tmux attach -t $session
+      dest: /home/vagrant/dare/tmux/multiscreen
+    run_once: yes
+  - name: Executing all files.
+    command: sh "{{item.filename}}" {{item.args}}
+    with_items:
+      - { filename: "/home/vagrant/dare/scripts/tmux-setup.sh", args: "ncurses-devel, 'Development tools'"}
+  - name: Export Self Signed certificate
+    expect:
+      command: /bin/bash /home/vagrant/dare/TLS/exportcertscript.sh
+      responses:
+        password: "password"
+      chdir: /home/vagrant/dare/TLS
+      creates: /home/vagrant/dare/TLS/*.cer
