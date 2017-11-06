@@ -1,0 +1,4 @@
+tmux_dir: /opt/infra/tmux
+certificate_dir: /opt/cloudera/security/x509
+jks_dir: /opt/cloudera/security/jks
+scripts_dir: /home/vagrant/dare/scripts

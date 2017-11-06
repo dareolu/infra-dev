@@ -1,0 +1,13 @@
+---
+- hosts: cloudera
+  user: vagrant
+  become: true
+  gather_facts: no
+  roles:
+    - { role: common,  tags: ["common"]  }
+- hosts: edgenode
+  roles:
+    - { role: tmux,  tags: ["edgenode"]  }
+- hosts: cm-masters
+  roles:
+    - {role: tls, tags: ["tls"] }
