@@ -1,5 +1,5 @@
 ---
-- hosts: cloudera
+- hosts: edgenode
   user: vagrant
   become: true
   gather_facts: no
@@ -28,9 +28,8 @@
     with_items:
       - "{{ '/opt/cloudera/security/x509/' }}"
       - "{{ '/opt/cloudera/security/jks/' }}"
-      - "{{ '/home/vagrant/dare/TLS/' }}"
-      - "{{'/home/vagrant/dare/scripts/'}}"
-      - "{{'/home/vagrant/dare/tmux/'}}"
+      - "{{ '/home/vagrant/dare/TLS' }}"
+      - "{{'/home/vagrant/dare/scripts'}}"
   - name: create keystores
     command: /usr/java/jdk1.8.0_151/bin/keytool -genkeypair -keystore $(hostname -f).keystore -keyalg RSA -alias $(hostname --short) -dname "CN=$(hostname -f),OU=Security,O=Hadoop,L=Tilbury,ST=Essex,C=UK" -storepass password -keypass password
     args:
@@ -46,6 +45,13 @@
         sudo /usr/java/jdk1.8.0_151/bin/keytool -export -alias $(hostname -s) -keystore /home/vagrant/dare/TLS/$(hostname).keystore -rfc -file selfsigned.cer
       dest: /home/vagrant/dare/TLS/exportcertscript.sh
     run_once: yes
+  - name: Export Self Signed certificate
+    expect:
+      command: /bin/bash /home/vagrant/dare/TLS/exportcertscript.sh
+      responses:
+        password: "password"
+      chdir: /home/vagrant/dare/TLS
+      creates: /home/vagrant/dare/TLS/*.cer
   - copy:
       content: |
         #!/bin/bash
@@ -109,42 +115,5 @@
         fi
       dest:  /home/vagrant/dare/scripts/tmux-setup.sh
     run_once: yes
-  - copy:
-      content: |
-        #!/bin/sh
-        usage() {
-          echo "Usage: $0 user1@host1 user2@host2 host3 host{4..6} host7 host8 [...]"
-        }
-        [ $# -lt 1 ] && usage && exit 1
-
-        create_ssh_pane() {
-          local session=$1
-          local host=$2
-
-          tmux has-session -t $session 2>/dev/null \
-            && tmux split-window -t $session "exec ssh $host" \
-            || tmux new-session -d -s $session "exec ssh $host"
-
-          tmux select-layout -t $session tiled >/dev/null
-        }
-
-        export session="cssh-$$"
-        for host in "$@"; do
-          create_ssh_pane $session $host
-        done
-        #tmux set-window-option -t $session status off >/dev/null
-        tmux set-window-option -t $session synchronize-panes on >/dev/null
-        exec tmux attach -t $session
-      dest: /home/vagrant/dare/tmux/multiscreen
-    run_once: yes
-  - name: Executing all files.
-    command: sh "{{item.filename}}" {{item.args}}
-    with_items:
-      - { filename: "/home/vagrant/dare/scripts/tmux-setup.sh", args: "ncurses-devel, 'Development tools'"}
-  - name: Export Self Signed certificate
-    expect:
-      command: /bin/bash /home/vagrant/dare/TLS/exportcertscript.sh
-      responses:
-        password: "password"
-      chdir: /home/vagrant/dare/TLS
-      creates: /home/vagrant/dare/TLS/*.cer
+  - name: Setup Tmux
+    command: /bin/bash /home/vagrant/dare/scripts/tmux-setup.sh

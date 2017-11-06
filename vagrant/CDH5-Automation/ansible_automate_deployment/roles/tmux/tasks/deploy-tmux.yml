@@ -1,0 +1,21 @@
+---
+# tasks file for tmux
+- copy:
+    src: ../../bin/deploy_tmux.sh
+    dest: "{{ tmux_dir }}/deploy-tmux.sh"
+    owner: root
+    group: root
+    mode: 0744
+  run_once: yes
+- copy:
+    src: ../../bin/multiscreen
+    dest: "{{ tmux_dir }}/multiscreen"
+    owner: vagrant
+    group: vagrant
+    mode: 0777
+  run_once: yes
+- name: configure tmux for edgenode
+  command: "{{ tmux_dir }}/deploy-tmux.sh ncurses-devel 'Development tools' {{ tmux_dir }}"
+  args:
+    chdir: "{{ tmux_dir }}"
+    creates: "{{ tmux_dir }}/tmuxIsInstalled"

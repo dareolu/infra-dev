@@ -1,0 +1,34 @@
+---
+# tasks file for common
+- name: Create directories for the infrastructure
+  file:
+    path: "{{ item }}"
+    owner: cloudera-scm
+    group: cloudera-scm
+    state: directory
+    mode: 0777
+  with_items:
+    - "{{tmux_dir}}"
+    - "{{certificate_dir}}"
+    - "{{ jks_dir }}"
+    - "{{scripts_dir}}"
+- name: install pre-requisite libraries
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    #- '*'
+    - epel-release
+    - python-pip
+- pip:
+    name: "{{ item }}"
+    extra_args: --upgrade
+  with_items:
+    - pexpect
+    - pip
+- copy:
+    src: /usr/java/jdk1.8.0_151/jre/lib/security/cacerts
+    dest: /usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts
+    owner: root
+    group: root
+    mode: 0744

@@ -1,0 +1,17 @@
+---
+- hosts: cdh-node-prod-2
+  user: vagrant
+  become: true
+  gather_facts: no
+  tasks:
+  - name: Executing all files.
+    command: sh "{{item.filename}}" {{item.args}}
+    with_items: 
+      - { filename: "/home/vagrant/dare/scripts/tmux-setup.sh", args: "ncurses-devel, 'Development tools'"}
+  - name: Export Self Signed certificate
+    expect:
+      command: /bin/bash /home/vagrant/dare/TLS/exportcertscript.sh
+      responses:
+        password: "password"
+      chdir: /home/vagrant/dare/TLS
+      creates: /home/vagrant/dare/TLS/*.cer
