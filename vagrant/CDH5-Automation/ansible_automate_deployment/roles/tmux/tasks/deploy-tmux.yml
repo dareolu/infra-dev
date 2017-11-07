@@ -19,3 +19,7 @@
   args:
     chdir: "{{ tmux_dir }}"
     creates: "{{ tmux_dir }}/tmuxIsInstalled"
+- name: Adding multiscreen to path for all user in the system
+  lineinfile: dest=/etc/profile line='export PATH=$PATH:/opt/infra/tmux' insertafter='EOF' regexp='export PATH=\$PATH:/opt/infra/tmux' state=present
+- name: Source the etc/profile file
+  shell: source /etc/profile
