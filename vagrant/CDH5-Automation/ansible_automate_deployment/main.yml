@@ -1,13 +1,28 @@
 ---
-- hosts: cloudera
+#the major hard coded value that needs immediate attention is in the cloudera role's main.yml - value cm-master-dev-1
+- hosts: all
   user: vagrant
-  become: true
+  become: yes
   gather_facts: no
   roles:
     - { role: common,  tags: ["common"]  }
 - hosts: edgenode
+  user: vagrant
+  become: yes
   roles:
     - { role: tmux,  tags: ["edgenode"]  }
 - hosts: cm-masters
+  user: vagrant
+  become: yes
   roles:
     - {role: tls, tags: ["tls"] }
+- hosts: all
+  user: vagrant
+  become: yes
+  roles:
+    - {role: cloudera, tags: ["cloudera"]}
+- hosts: database
+  user: vagrant
+  become: yes
+  roles:
+    - {role: mysql, tags: ["mysql"]}
