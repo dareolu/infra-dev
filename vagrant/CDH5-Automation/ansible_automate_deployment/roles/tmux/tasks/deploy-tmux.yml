@@ -19,3 +19,11 @@
   args:
     chdir: "{{ tmux_dir }}"
     creates: "{{ tmux_dir }}/tmuxIsInstalled"
+- name: Adding the path in the bashrc files
+  lineinfile: dest=/root/.bashrc line='export PATH=$PATH:/opt/infra/tmux' insertafter='EOF' regexp='export PATH=\$PATH:/opt/infra/tmux' state=present
+- name: Source the bashrc file
+  shell: source /root/.bashrc
+- name: Adding the path for all user in the system
+  lineinfile: dest=/etc/profile line='export PATH=$PATH:/opt/infra/tmux' insertafter='EOF' regexp='export PATH=\$PATH:/opt/infra/tmux' state=present
+- name: Source the etc/profile file
+  shell: source /etc/profile
