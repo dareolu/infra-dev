@@ -1,2 +1,8 @@
 ---
 # tasks file for cloudera
+- copy:
+    src:  /vagrant/cm-master-dev-1/usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts
+    dest: /usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts
+    owner: root
+    group: root
+    mode: 0777

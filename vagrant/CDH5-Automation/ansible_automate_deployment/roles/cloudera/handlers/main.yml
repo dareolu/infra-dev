@@ -1,2 +1,5 @@
 ---
 # handlers file for cloudera
+- name: copy all jssecacerts from cmhost to all servers
+  synchronize: src=/usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts dest=/usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts
+  delegate_to: cm-master-prod-1

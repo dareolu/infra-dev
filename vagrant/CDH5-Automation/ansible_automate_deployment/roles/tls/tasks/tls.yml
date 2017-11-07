@@ -1,11 +1,15 @@
 ---
 # tasks file for tls
 - copy:
+    src: /usr/java/jdk1.8.0_151/jre/lib/security/cacerts
+    dest: /usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts
+    #dest: /home/vagrant/cacerts
+- copy:
     src: ../../bin/create_keystores.sh
     dest: "{{ jks_dir }}/create_keystores.sh"
-    owner: root
-    group: root
-    mode: 0777
+    #owner: root
+    #group: root
+    #mode: 0777
   #run_once: yes
 - name: create keystores
   command: /bin/bash "{{ jks_dir }}/create_keystores.sh"
@@ -38,3 +42,7 @@
     responses:
       Trust this certificate?: "yes"
     creates: "{{ scripts_dir }}/certImported"
+  register: certificate_imported_into_jssecacerts
+- fetch:
+    src: /usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts
+    dest: /vagrant/
