@@ -1,0 +1,57 @@
+---
+# tasks file for deploy-anaconda
+
+- name: Parcel directory
+  file:
+    path: "{{ parcel_dir }}"
+    state: directory
+    mode: 0777
+- name: Download parcel
+  get_url:
+    url:  "{{ parcel_url }}/{{ parcel_name }}"
+    dest: "{{ parcel_dir }}/{{ parcel_name }}"
+    checksum: md5:a96b2b254af0b977fcacdf486f18e405
+- name: Untar parcel
+  unarchive:
+    src: "{{ parcel_dir }}/{{ parcel_name }}"
+    dest: "{{ parcel_dir }}"
+    copy: no
+    creates: "{{ parcel_dir }}/Anaconda-4.0.0"
+- name: Activate
+  file:
+    src: "{{ parcel_dir }}/Anaconda-4.0.0"
+    path: "{{ parcel_dir }}/Anaconda"
+    state: link
+- name: install packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ anaconda.packages }}"
+- pip:
+    name: "{{ item }}"
+    extra_args: --upgrade
+  with_items:
+    - pexpect
+    - pip
+
+- name: add conda to user PATH
+  template:
+    src: anaconda.sh.j2
+    dest: /etc/profile.d/conda.sh
+    mode: 0755
+
+#- name: check version of conda
+#  command: conda --version
+#  environment:
+#      PATH: "{{ ansible_env.PATH }}"
+#  register: conda_version
+#  changed_when: false
+
+# FIXME: pin conda version to 4.3.8. bug with other versions doesn't allow conda environment creation
+#- name: update conda
+#  become: yes
+#  become_user: root
+#  command: "conda install conda={{ anaconda.conda_version }}"
+#  environment:
+#      PATH: "{{ ansible_env.PATH }}"
+#  when: conda_version.stderr != 'conda {{ anaconda.conda_version }}'

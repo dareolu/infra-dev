@@ -1,0 +1,17 @@
+$TTL 86400
+@   IN  SOA     ns1.xpoint.internal.com. root.xpoint.internal. (
+        2013042201  ;Serial
+        3600        ;Refresh
+        1800        ;Retry
+        604800      ;Expire
+        86400       ;Minimum TTL
+)
+; Specify our two nameservers
+                IN      NS              ns1.xpoint.internal.
+; Resolve nameserver hostnames to IP, replace with your two droplet IP addresses.
+ns1             IN      A               10.10.48.30
+
+30.48.10.10.in-addr.arpa.         IN      NS       ns1.xpoint.internal.com.
+35.48.10.10.in-addr.arpa.         IN      PTR      cm-master-dev2-1.
+36.48.10.10.in-addr.arpa.         IN      PTR      cdh-master-dev2-1.
+37.48.10.10.in-addr.arpa.         IN      PTR      cdh-master-dev2-2.

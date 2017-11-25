@@ -1,0 +1,1 @@
+sudo /usr/java/jdk1.8.0_151/bin/keytool -genkeypair -keystore $(hostname -f).keystore -keyalg RSA -alias $(hostname --short) -dname "CN=$(hostname -f),OU=Security,O=Hadoop,L=Tilbury,ST=Essex,C=UK" -storepass password -keypass password

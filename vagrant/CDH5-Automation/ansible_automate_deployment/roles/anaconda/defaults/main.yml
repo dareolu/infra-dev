@@ -1,0 +1,40 @@
+---
+# defaults file for anaconda
+cloudera:
+  use_cached_parcels: False
+
+anaconda:
+  parcel_dir: "/{{ 'data' if cloudera.use_cached_parcels else 'opt' }}/cloudera/parcels/Anaconda"
+  conda_version: 4.3.8
+  packages:
+    - gcc
+  #  - libcairo2-dev
+  python_env_packages:
+    ipython
+    ipywidgets
+    jupyter
+    matplotlib
+    networkx
+    notebook
+    numpy
+    pandas
+    patsy
+    scikit-learn
+    scipy
+    seaborn
+    six
+    statsmodels
+  python_env_pip_packages:
+    boto
+    Faker
+    hdfs
+    impala
+    impyla
+    pulp
+    py4j
+    pyodbc
+    PyHive
+    PyYAML
+    requests_kerberos
+    thrift-sasl
+    thrift==0.9.3

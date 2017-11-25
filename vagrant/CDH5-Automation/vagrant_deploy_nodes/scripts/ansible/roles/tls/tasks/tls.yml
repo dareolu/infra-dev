@@ -1,0 +1,48 @@
+---
+# tasks file for tls
+- copy:
+    src: /usr/java/jdk1.8.0_151/jre/lib/security/cacerts
+    dest: /usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts
+    #dest: /home/vagrant/cacerts
+- copy:
+    src: ../../bin/create_keystores.sh
+    dest: "{{ jks_dir }}/create_keystores.sh"
+    #owner: root
+    #group: root
+    #mode: 0777
+  #run_once: yes
+- name: create keystores
+  command: /bin/bash "{{ jks_dir }}/create_keystores.sh"
+  args:
+    chdir: "{{ jks_dir }}"
+    creates: "{{ jks_dir }}/*.keystore"
+- copy:
+    content: |
+      sudo /usr/java/jdk1.8.0_151/bin/keytool -export -alias $(hostname -s) -keystore "{{ jks_dir }}/$(hostname).keystore" -rfc -file selfsigned.cer
+    dest: "{{ jks_dir }}/exportcertscript.sh"
+  #run_once: yes
+- name: Export Self Signed certificate
+  expect:
+    command: /bin/bash "{{ jks_dir }}/exportcertscript.sh"
+    responses:
+      password: "password"
+    chdir: "{{ jks_dir }}"
+    creates: "{{ jks_dir }}/selfsigned.cer"
+- copy:
+    remote_src: true
+    src: "{{ jks_dir }}/selfsigned.cer"
+    dest: "{{ certificate_dir }}/cmhost.pem"
+- copy:
+    content: |
+      sudo /usr/java/jdk1.8.0_151/bin/keytool -import -alias $(hostname -s) -file /opt/cloudera/security/jks/selfsigned.cer -keystore  /usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts -storepass changeit && touch /home/vagrant/dare/scripts/certImported
+    dest: "{{ scripts_dir }}/importcertscript.sh"
+- name: import certificate into Java Trust Store
+  expect:
+    command: /bin/bash "{{ scripts_dir }}/importcertscript.sh"
+    responses:
+      Trust this certificate?: "yes"
+    creates: "{{ scripts_dir }}/certImported"
+  register: certificate_imported_into_jssecacerts
+- fetch:
+    src: /usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts
+    dest: /vagrant/

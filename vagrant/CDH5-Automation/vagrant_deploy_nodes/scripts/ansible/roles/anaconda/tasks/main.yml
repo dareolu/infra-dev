@@ -1,0 +1,4 @@
+---
+# tasks file for Anaconda
+- name: Deploying Anaconda.
+  include: deploy-anaconda.yml
