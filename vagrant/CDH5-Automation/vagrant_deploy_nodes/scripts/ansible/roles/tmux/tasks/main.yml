@@ -1,0 +1,4 @@
+---
+# tasks file for tmux
+- name: Executing tmux script.
+  include: deploy-tmux.yml

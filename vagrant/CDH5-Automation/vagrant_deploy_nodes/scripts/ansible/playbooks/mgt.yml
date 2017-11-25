@@ -1,0 +1,56 @@
+---
+- hosts: cloudera
+  user: vagrant
+  become: true
+  gather_facts: no
+  tasks:
+  - name: install pre-requisite libraries
+    yum:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+      #- '*'
+      - epel-release
+      - python-pip
+  - pip:
+      name: "{{ item }}"
+      extra_args: --upgrade
+    with_items:
+      - pexpect
+      - pip
+  - name: Create directories for certificates
+    file:
+      path: "{{ item }}"
+      owner: cloudera-scm
+      group: cloudera-scm
+      state: directory
+      mode: 0755
+    with_items:
+      - "{{ '/opt/cloudera/security/x509/' }}"
+      - "{{ '/opt/cloudera/security/jks/' }}"
+      - "{{ '/home/vagrant/dare/TLS/' }}"
+      - "{{'/home/vagrant/dare/scripts/'}}"
+      - "{{'/home/vagrant/dare/tmux/'}}"
+  - name: create keystores
+    command: /usr/java/jdk1.8.0_151/bin/keytool -genkeypair -keystore $(hostname -f).keystore -keyalg RSA -alias $(hostname --short) -dname "CN=$(hostname -f),OU=Security,O=Hadoop,L=Tilbury,ST=Essex,C=UK" -storepass password -keypass password
+    args:
+      chdir: /home/vagrant/dare/TLS
+      creates: /home/vagrant/dare/TLS/*.keystore
+  - copy:
+      src: /usr/java/jdk1.8.0_151/jre/lib/security/cacerts
+      dest: /usr/java/jdk1.8.0_151/jre/lib/security/jssecacerts
+      owner: root
+      group: root
+  - copy:
+      content: |
+        sudo /usr/java/jdk1.8.0_151/bin/keytool -export -alias $(hostname -s) -keystore /home/vagrant/dare/TLS/$(hostname).keystore -rfc -file selfsigned.cer
+      dest: /home/vagrant/dare/TLS/exportcertscript.sh
+    run_once: yes
+    run_once: yes
+  - name: Export Self Signed certificate
+    expect:
+      command: /bin/bash /home/vagrant/dare/TLS/exportcertscript.sh
+      responses:
+        password: "password"
+      chdir: /home/vagrant/dare/TLS
+      creates: /home/vagrant/dare/TLS/*.cer
